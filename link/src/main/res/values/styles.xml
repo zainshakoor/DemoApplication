@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base library theme -->
+    <style name="Theme.XMLModule" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize library-specific theme attributes if needed -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <!-- Add other theme attributes as needed -->
+    </style>
+</resources>

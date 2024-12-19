@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.xmlmodule">
+
+    <application>
+        <activity
+            android:name="com.example.link.TestingActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.example.link.screens.HomeActivity"
+            android:exported="true"
+            android:theme="@style/Theme.XMLModule" />
+
+
+    </application>
+
+</manifest>
