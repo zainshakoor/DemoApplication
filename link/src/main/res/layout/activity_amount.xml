@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.link.screens.AmountActivity">
+
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120dp"
+        android:fontFamily="@font/poppins_medium"
+        android:text="Enter your Amount"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/textInputLayout1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:layout_marginHorizontal="25dp"
+        android:hint="Amount"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusBottomEnd="5dp"
+        app:boxCornerRadiusBottomStart="5dp"
+        app:boxCornerRadiusTopEnd="5dp"
+        app:boxCornerRadiusTopStart="5dp"
+        app:boxStrokeColor="@color/DarkGreen"
+        app:boxStrokeWidth="1dp"
+        app:endIconMode="custom"
+        app:hintTextColor="@color/black"
+        app:layout_constraintBottom_toTopOf="@+id/button_sendMoney"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+
+            android:id="@+id/EditTextAmount"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="10dp"
+            android:inputType="text"
+            android:maxLength="17"
+            android:paddingStart="10dp"
+            android:paddingEnd="0dp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button_sendMoney"
+        style="@style/button_style"
+        android:layout_width="match_parent"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="100dp"
+        android:fontFamily="@font/poppins_medium"
+        android:gravity="center"
+        android:paddingTop="5dp"
+        android:text="Contniue"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+       />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
