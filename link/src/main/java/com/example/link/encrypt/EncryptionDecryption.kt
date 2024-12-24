@@ -1,91 +1,114 @@
 package com.example.link.encrypt
 
-import android.util.Log
-import com.google.android.gms.common.util.Base64Utils
-import java.security.KeyFactory
-import java.security.KeyPair
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.security.KeyStore
+import javax.crypto.Cipher
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.PublicKey
-import java.security.spec.PKCS8EncodedKeySpec
-import java.security.spec.X509EncodedKeySpec
-import javax.crypto.Cipher
+import android.util.Base64
+import android.util.Log
+import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
+import java.security.cert.CertificateFactory
 
 object ExtEncryptionDecryption {
-    private val TAG = ExtEncryptionDecryption::class.java.name
 
-    var myPublicKey: String = ""
-    var myPrivateKey: String = ""
+    private const val KEY_ALIAS = "MyRSAKeyAlias"
+    var mPublicKeyPEM: String? = null // Store the public key in PEM format
+    var mPrivateKey: PrivateKey? = null
 
     init {
-        // Generate RSA Key Pair with 2048-bit key size
-        val keyPair = generateRSAKeyPair(2048)
+        if (isKeyPairGenerated()) {
+            Log.d("EncryptDecryptRSA", "RSA Key Pair already exists. Skipping key generation.")
+        } else {
+            generateKeyPair()
+        }
+        val publicKey = getPublicKey()
+        mPrivateKey = getPrivateKey()
 
-        // Convert the generated keys to Base64 encoding (DER format)
-        myPublicKey = Base64Utils.encode(keyPair.public.encoded)
-        myPrivateKey = Base64Utils.encode(keyPair.private.encoded)
-
-        Log.d("Public Key", myPublicKey)
-        Log.d("Private Key", myPrivateKey)
+        // Convert the public key to PEM format and store it
+        mPublicKeyPEM = publicKeyToPEM(publicKey)
+        Log.d("PublicKey", "Public Key PEM: \n$mPublicKeyPEM")
     }
 
-    // Function to generate RSA Key Pair with specified key size
-    private fun generateRSAKeyPair(keySize: Int): KeyPair {
-        val keyGen = KeyPairGenerator.getInstance("RSA")
-        keyGen.initialize(keySize) // Set the key size (2048 bits)
-        return keyGen.generateKeyPair()
-    }
-
-    private fun getPublicKeyFromDer(base64PublicKey: String): PublicKey? {
+    private fun isKeyPairGenerated(): Boolean {
         return try {
-            val publicKeyDer = Base64Utils.decode(base64PublicKey)
-            val keySpec = X509EncodedKeySpec(publicKeyDer)
-            val keyFactory = KeyFactory.getInstance("RSA")
-            keyFactory.generatePublic(keySpec)
+            val keyStore = KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            val privateKey = keyStore.getKey(KEY_ALIAS, null)
+            privateKey != null
         } catch (e: Exception) {
-            e.printStackTrace()
-            null
+            false
         }
     }
 
-    private fun getPrivateKeyFromDer(base64PrivateKey: String): PrivateKey? {
-        return try {
-            val privateKeyDer = Base64Utils.decode(base64PrivateKey)
-            val keySpec = PKCS8EncodedKeySpec(privateKeyDer)
-            val keyFactory = KeyFactory.getInstance("RSA")
-            keyFactory.generatePrivate(keySpec)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+    private fun generateKeyPair() {
+        val keyPairGenerator =
+            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
+        val keyGenParameterSpec = KeyGenParameterSpec.Builder(
+            KEY_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+            .setKeySize(2048)
+            .build()
+
+        keyPairGenerator.initialize(keyGenParameterSpec)
+        keyPairGenerator.generateKeyPair()
+
+        Log.d("EncryptDecryptRSA", "RSA Key Pair generated and stored in Keystore.")
     }
 
-    fun String.encrypt(): String {
-        return try {
-            if (this.isEmpty()) return ""
-            val cipher =
-                Cipher.getInstance("RSA/ECB/PKCS1Padding") // Using the same padding as Node.js
-            cipher.init(Cipher.ENCRYPT_MODE, getPublicKeyFromDer(myPublicKey))
-            val encryptedBytes = cipher.doFinal(this.toByteArray())
-            Base64Utils.encode(encryptedBytes).trimIndent().replace("\n", "")
-        } catch (e: Exception) {
-            Log.e(TAG, "Encryption error: ${e.message}")
-            this
-        }
+    private fun getPublicKey(): PublicKey {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        return keyStore.getCertificate(KEY_ALIAS).publicKey
     }
 
-    fun String.decrypt(): String {
-        return try {
-            if (this.isEmpty()) return ""
-            val cipher =
-                Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding") // Using the same padding as Node.js
-            cipher.init(Cipher.DECRYPT_MODE, getPrivateKeyFromDer(myPrivateKey))
-            val decryptedBytes =
-                cipher.doFinal(Base64Utils.decode(this.trimIndent().replace("\n", "")))
-            String(decryptedBytes)
-        } catch (e: Exception) {
-            Log.e(TAG, "Decryption error: ${e.message}")
-            this
-        }
+    private fun getPrivateKey(): PrivateKey {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        return keyStore.getKey(KEY_ALIAS, null) as PrivateKey
+    }
+
+    // Convert PublicKey to PEM format
+    private fun publicKeyToPEM(publicKey: PublicKey): String {
+        val encoded = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
+        return "-----BEGIN PUBLIC KEY-----\n$encoded\n-----END PUBLIC KEY-----"
+    }
+
+    // Convert PEM to PublicKey
+    private fun pemToPublicKey(pem: String): PublicKey {
+        val certificateFactory = CertificateFactory.getInstance("X.509")
+        val cleanedPem = pem.replace("-----BEGIN PUBLIC KEY-----", "")
+            .replace("-----END PUBLIC KEY-----", "")
+            .replace("\n", "")
+        val decodedBytes = Base64.decode(cleanedPem, Base64.DEFAULT)
+        val certInputStream = ByteArrayInputStream(decodedBytes)
+        val cert = certificateFactory.generateCertificate(certInputStream)
+        return cert.publicKey
+    }
+
+    // Extension function for encryption
+    fun ByteArray.encryptData(): ByteArray {
+        val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, pemToPublicKey(mPublicKeyPEM!!))
+        return cipher.doFinal(this)
+    }
+
+    // Extension function for decryption
+    fun ByteArray.decryptData(): ByteArray {
+        val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.DECRYPT_MODE, mPrivateKey)
+        return cipher.doFinal(this)
+    }
+
+    // Decode Base64 and decrypt the data
+    fun decryptDataFromBase64(base64String: String): String {
+        val encryptedData = Base64.decode(base64String, Base64.DEFAULT)
+        val decryptedBytes = encryptedData.decryptData()
+        return String(decryptedBytes)
     }
 }

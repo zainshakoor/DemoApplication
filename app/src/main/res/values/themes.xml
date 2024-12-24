@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.DemoApplication" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.DemoApplication" parent="Theme.FuelManagementApp">
         <!-- Customize your theme here -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="android:colorBackground">@color/white</item>
-        <item name="android:textColorPrimary">@color/black</item>
+
         <!-- Add other theme attributes as needed -->
     </style>
+
+<!-- Base application theme. -->
+<style name="Base.Theme.FuelManagementApp" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Customize your light theme here. -->
+    <item name="colorPrimary">@color/DarkGreen</item>
+
+</style>
+
+<style name="Theme.FuelManagementApp" parent="Base.Theme.FuelManagementApp" />
+
+<style name="Theme.FuelManagementApp.NoActionBar">
+    <item name="colorPrimary">@color/DarkGreen</item>
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+</style>
+
+<style name="Theme.AppCompat.FuelManagementApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+<style name="Theme.FuelManagementApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+
+
 </resources>

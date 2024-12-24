@@ -12,4 +12,4 @@ data class SendAuthModel(
     val sdkVersion: String,
     val workspaceKuid: String,
     val projectKuid: String,
-    val journey: String = "user_registration")
+    val journey: String)

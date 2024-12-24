@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dev.demoapplication.R
 import com.dev.demoapplication.utils.getDeviceId
-import com.example.link.screens.HomeActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,8 +111,8 @@ fun LoginScreen(navigateToHome: () -> Unit)
                 onClick = {
                     // Hardcoded credentials check
                     if (email == "test" && password == "123456") {
-                        val intent = Intent(context, HomeActivity::class.java)
-                        context.startActivity(intent)
+//                        val intent = Intent(context, HomeActivity::class.java)
+//                        context.startActivity(intent)
                     } else {
                         Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT)
                             .show()

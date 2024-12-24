@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dev.demoapplication.ui.theme.DemoApplicationTheme
 import com.example.link.screens.HomeActivity
+import com.example.link.screens.login.LoginActivity
 
 class MainActivity : FragmentActivity() {
     @RequiresApi(Build.VERSION_CODES.P)
@@ -43,7 +44,7 @@ class MainActivity : FragmentActivity() {
 //                            LoginScreen(
 //                                navigateToHome = { navController.navigate("home_screen") }
 //                            )
-                            val intent = Intent(context, HomeActivity::class.java)
+                            val intent = Intent(context, LoginActivity::class.java)
                             context.startActivity(intent)
                         }
 

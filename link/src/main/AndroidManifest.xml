@@ -2,16 +2,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.xmlmodule">
 
-    <application>
+    <application android:theme="@style/Theme.DemoApplication">
+        <activity
+            android:name="com.example.link.screens.AmountActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.example.link.screens.dashboard.DashBoardActivity"
+            android:exported="false" /> <!-- Login Activity -->
+        <activity
+            android:name="com.example.link.screens.login.LoginActivity"
+            android:exported="false" /> <!-- Testing Activity -->
         <activity
             android:name="com.example.link.TestingActivity"
-            android:exported="false" />
+            android:exported="false" /> <!-- Home Activity with a specific theme -->
         <activity
             android:name="com.example.link.screens.HomeActivity"
             android:exported="true"
-            android:theme="@style/Theme.XMLModule" />
-
-
+            android:theme="@style/Theme.FuelManagementApp" /> <!-- Preloaded Fonts -->
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

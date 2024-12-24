@@ -2,13 +2,17 @@ package com.example.link.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import android.provider.Settings
+import android.util.DisplayMetrics
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import checkIfRooted
 import com.example.link.encrypt.ExtEncryptionDecryption
-import com.example.link.encrypt.ExtEncryptionDecryption.decrypt
 import com.example.link.model.RequestModel
 import com.example.link.model.ResponseModel
 import com.example.link.model.SendAuthModel
@@ -16,6 +20,7 @@ import com.example.link.model.VerifyAuthModel
 import com.example.link.network.RetrofitClient
 import com.example.link.screens.HomeActivity
 import com.google.firebase.messaging.FirebaseMessaging
+import getScreenResolution
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.util.UUID
 
 class HomeViewModel : ViewModel() {
 
@@ -31,8 +37,9 @@ class HomeViewModel : ViewModel() {
 
     private var decryptedChallenge: String? = null
 
+//    val deviceId="kj982hdwqwqkjois"
+
     // SharedFlow to receive challenge keys
-    val deviceId = "dkjs9osaa21h212aa3xojosa2"
     private val _challengeKeyFlow = MutableSharedFlow<String>()
     val challengeKeyFlow: SharedFlow<String> = _challengeKeyFlow
 
@@ -42,9 +49,6 @@ class HomeViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    /**
-     * Retrieves the FCM token and stores it in SharedPreferences.
-     */
     fun retrieveAndStoreFCMToken(context: Context) {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
@@ -62,9 +66,6 @@ class HomeViewModel : ViewModel() {
             }
     }
 
-    /**
-     * Saves the FCM token to SharedPreferences.
-     */
     private fun saveTokenToSharedPreferences(context: Context, token: String) {
         val sharedPreferences: SharedPreferences =
             context.getSharedPreferences(HomeActivity.PREFS_NAME, Context.MODE_PRIVATE)
@@ -75,11 +76,8 @@ class HomeViewModel : ViewModel() {
         Log.d(TAG, "FCM Token saved to SharedPreferences.")
     }
 
-    /**
-     * Starts the entire Register -> VerifyAuth -> SendAuth -> VerifyAuth flow.
-     */
+    @RequiresApi(Build.VERSION_CODES.R)
     fun performRegisterVerifySendFlow(context: Context) {
-
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             val sharedPreferences =
@@ -91,11 +89,12 @@ class HomeViewModel : ViewModel() {
                 return@launch
             }
 
-//            val deviceId = getDeviceId(context)
-            Log.d(TAG, "Starting Register -> VerifyAuth -> SendAuth -> VerifyAuth flow.")
+            // Get device id
+         val deviceId = getDeviceId(context)
+//         Log.d(TAG, "Starting Register -> VerifyAuth -> SendAuth -> VerifyAuth flow.")
 
             // Step 1: Register Device
-            val registerResponse = registerDeviceSuspend(fcmToken, deviceId)
+            val registerResponse = registerDeviceSuspend(fcmToken, deviceId, context)
             if (registerResponse == null || !registerResponse.isSuccessful) {
                 Log.e(TAG, "Register Device failed. Stopping the flow.")
                 return@launch
@@ -119,7 +118,7 @@ class HomeViewModel : ViewModel() {
 
             Log.d(TAG, "Received first Challenge Key: $challengeKey1")
 
-            // Step 3: Decrypt Challenge Key
+            // Step 3: Decrypt Challenge Key using the decryptDataFromBase64 function
             decryptedChallenge = decryptChallengeKey(challengeKey1)
             if (decryptedChallenge == null) {
                 Log.e(TAG, "Failed to decrypt first Challenge Key. Stopping the flow.")
@@ -138,7 +137,7 @@ class HomeViewModel : ViewModel() {
             Log.d(TAG, "VerifyAuth after Register successful.")
 
             // Step 5: Send Authentication Request
-            val sendAuthResponse = sendAuthSuspend(fcmToken, deviceId)
+            val sendAuthResponse = sendAuthSuspend(fcmToken, deviceId,context)
             if (sendAuthResponse == null || !sendAuthResponse.isSuccessful) {
                 Log.e(TAG, "SendAuth failed. Stopping the flow.")
                 return@launch
@@ -162,7 +161,7 @@ class HomeViewModel : ViewModel() {
 
             Log.d(TAG, "Received second Challenge Key: $challengeKey2")
 
-            // Step 7: Decrypt Challenge Key
+            // Step 7: Decrypt Challenge Key using the decryptDataFromBase64 function
             decryptedChallenge = decryptChallengeKey(challengeKey2)
             if (decryptedChallenge == null) {
                 Log.e(TAG, "Failed to decrypt second Challenge Key. Stopping the flow.")
@@ -179,14 +178,11 @@ class HomeViewModel : ViewModel() {
             }
 
             Log.d(TAG, "Final VerifyAuth successful. Flow completed.")
-            _isLoading.value=false
+            _isLoading.value = false
             _message.postValue(verifyAuthResponse2.body()?.message.toString())
         }
     }
 
-    /**
-     * Receives challengeKey from Firebase and emits it to the SharedFlow.
-     */
     fun receiveChallengeKey(challengeKey: String) {
         viewModelScope.launch {
             _challengeKeyFlow.emit(challengeKey)
@@ -194,37 +190,34 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Registers the device with the server. Suspend function.
-     */
+    @RequiresApi(Build.VERSION_CODES.R)
     private suspend fun registerDeviceSuspend(
         fcmToken: String,
-        deviceId: String
+        deviceId: String,
+        context: Context
     ): Response<ResponseModel>? {
-        val formattedKey = ExtEncryptionDecryption.myPublicKey
+        val deviceInfo = generateDeviceInfo(context)
 
+        val formattedkey=ExtEncryptionDecryption.mPublicKeyPEM.toString()
         val request = RequestModel(
             fcmToken = fcmToken,
-            publicKey = formattedKey,
+            publicKey =formattedkey,  // Ensure this is in PEM format
             deviceId = deviceId,
-            deviceModel = "Xiaomi|M2101K7G",
-            deviceOS = "Android 12",
-            hostAppVersion = "1.0.0",
-            isRooted = false,
-            screenResolution = "1080x1920",
-            userIdentifier = "your_user_identifier_here",
-            sdkVersion = "v2.1.2.33.dev",
-            workspaceKuid = "5fd236e39fdb44f7aaa11ad5271917fd",
-            projectKuid = "B078DB4F79A44E2FBAAE99E88CC3D893"
+            deviceModel = deviceInfo.deviceModel,
+            deviceOS = deviceInfo.deviceOS,
+            hostAppVersion = deviceInfo.hostAppVersion,
+            isRooted = deviceInfo.isRooted,
+            screenResolution = deviceInfo.screenResolution,
+            userIdentifier = deviceInfo.userIdentifier,
+            sdkVersion = deviceInfo.sdkVersion,
+            workspaceKuid = deviceInfo.workspaceKuid,
+            projectKuid = deviceInfo.projectKuid
         )
 
         return try {
             val response = RetrofitClient.instance.register(request)
             if (response.isSuccessful) {
-                Log.d(
-                    TAG,
-                    "Register Device API Success: ${response.body()?.status} - ${response.body()?.message}"
-                )
+                Log.d(TAG, "Register Device API Success: ${response.body()?.status} - ${response.body()?.message}")
             } else {
                 _isLoading.value = false
                 Log.e(TAG, "Register Device API Error: ${response.errorBody()?.string()}")
@@ -237,9 +230,6 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Verifies authentication with the server. Suspend function.
-     */
     private suspend fun verifyAuthSuspend(
         fcmToken: String,
         deviceId: String,
@@ -254,12 +244,8 @@ class HomeViewModel : ViewModel() {
         return try {
             val response = RetrofitClient.verifyAuthInstance.verifyAuth(verifyAuth)
             if (response.isSuccessful) {
-                Log.d(
-                    TAG,
-                    "VerifyAuth API Success: ${response.body()?.status} - ${response.body()?.message}"
-                )
+                Log.d(TAG, "VerifyAuth API Success: ${response.body()?.status} - ${response.body()?.message}")
             } else {
-//                _isLoading.value=false
                 Log.e(TAG, "VerifyAuth API Error: ${response.errorBody()?.string()}")
                 Log.e(TAG, "HTTP Error Code: ${response.code()} - ${response.message()}")
             }
@@ -270,34 +256,34 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Sends authentication request to the server. Suspend function.
-     */
+    @RequiresApi(Build.VERSION_CODES.R)
     private suspend fun sendAuthSuspend(
         fcmToken: String,
-        deviceId: String
+        deviceId: String,
+        context: Context
     ): Response<ResponseModel>? {
+        val deviceInfo = generateDeviceInfo(context)
+
         val sendAuthRequest = SendAuthModel(
             fcmToken = fcmToken,
             deviceId = deviceId,
-            deviceModel = "Xiaomi|M2101K7G",
-            deviceOS = "Android 12",
-            hostAppVersion = "1.0.0",
-            isRooted = false,
-            screenResolution = "1080x1920",
-            userIdentifier = "your_user_identifier_here",
-            sdkVersion = "v2.1.2.33.dev",
-            workspaceKuid = "5fd236e39fdb44f7aaa11ad5271917fd",
-            projectKuid = "B078DB4F79A44E2FBAAE99E88CC3D893"
+            deviceModel = deviceInfo.deviceModel,
+            deviceOS = deviceInfo.deviceOS,
+            hostAppVersion = deviceInfo.hostAppVersion,
+            isRooted = deviceInfo.isRooted,
+            screenResolution = deviceInfo.screenResolution,
+            userIdentifier = deviceInfo.userIdentifier,
+            sdkVersion = deviceInfo.sdkVersion,
+            workspaceKuid = deviceInfo.workspaceKuid,
+            projectKuid = deviceInfo.projectKuid,
+            journey = HomeActivity::class.simpleName.toString()
+
         )
 
         return try {
             val response = RetrofitClient.sendAuthInstance.sendRequest(sendAuthRequest)
             if (response.isSuccessful) {
-                Log.d(
-                    TAG,
-                    "SendAuth API Success: ${response.body()?.status} - ${response.body()?.message}"
-                )
+                Log.d(TAG, "SendAuth API Success: ${response.body()?.status} - ${response.body()?.message}")
             } else {
                 Log.e(TAG, "SendAuth API Error: ${response.errorBody()?.string()}")
                 Log.e(TAG, "HTTP Error Code: ${response.code()} - ${response.message()}")
@@ -309,25 +295,57 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Decrypts the challenge key.
-     */
     private fun decryptChallengeKey(encryptedKey: String): String? {
         return try {
-            encryptedKey.decrypt()
+            ExtEncryptionDecryption.decryptDataFromBase64(encryptedKey)
         } catch (e: Exception) {
             Log.e(TAG, "Error decrypting challenge key: ${e.message}", e)
             null
         }
     }
 
-    /**
-     * Retrieves the device ID.
-     */
-//    private fun getDeviceId(context: Context): String {
-//        return android.provider.Settings.Secure.getString(
-//            context.contentResolver,
-//            android.provider.Settings.Secure.ANDROID_ID
-//        )
-//    }
+    private fun getDeviceId(context: Context): String {
+        return android.provider.Settings.Secure.getString(
+            context.contentResolver,
+            android.provider.Settings.Secure.ANDROID_ID
+        )
+    }
+
+    // Helper function to generate dynamic device info
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun generateDeviceInfo(context: Context): DeviceInfo {
+        val deviceModel = Build.MODEL ?: "Unknown"
+        val deviceOS = "Android ${Build.VERSION.RELEASE}"
+        val hostAppVersion = context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        val isRooted = checkIfRooted()
+        val screenResolution = getScreenResolution(context)
+        val userIdentifier = UUID.randomUUID().toString()
+        val sdkVersion = Build.VERSION.SDK_INT.toString()
+        val workspaceKuid = "5fd236e39fdb44f7aaa11ad5271917fd"
+        val projectKuid = "B078DB4F79A44E2FBAAE99E88CC3D893"
+
+        return DeviceInfo(
+            deviceModel = deviceModel,
+            deviceOS = deviceOS,
+            hostAppVersion = hostAppVersion,
+            isRooted = isRooted,
+            screenResolution = screenResolution,
+            userIdentifier = userIdentifier,
+            sdkVersion = sdkVersion,
+            workspaceKuid = workspaceKuid,
+            projectKuid = projectKuid
+        )
+    }
+
+    data class DeviceInfo(
+        val deviceModel: String,
+        val deviceOS: String,
+        val hostAppVersion: String,
+        val isRooted: Boolean,
+        val screenResolution: String,
+        val userIdentifier: String,
+        val sdkVersion: String,
+        val workspaceKuid: String,
+        val projectKuid: String
+    )
 }
