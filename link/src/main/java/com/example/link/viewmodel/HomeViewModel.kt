@@ -3,15 +3,13 @@ package com.example.link.viewmodel
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import android.provider.Settings
-import android.util.DisplayMetrics
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import checkIfRooted
+import com.example.link.model.checkIfRooted
 import com.example.link.encrypt.ExtEncryptionDecryption
 import com.example.link.model.RequestModel
 import com.example.link.model.ResponseModel
@@ -20,7 +18,7 @@ import com.example.link.model.VerifyAuthModel
 import com.example.link.network.RetrofitClient
 import com.example.link.screens.HomeActivity
 import com.google.firebase.messaging.FirebaseMessaging
-import getScreenResolution
+import com.example.link.model.getScreenResolution
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

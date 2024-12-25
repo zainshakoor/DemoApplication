@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.link.screens.HomeActivity
 import com.example.link.screens.dashboard.DashBoardActivity
 import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
@@ -27,6 +26,8 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         const val PREFS_NAME = "MyAppPreferences"
         const val KEY_FCM_TOKEN = "firebase_token"
         const val KEY_CHALLENGE = "challenge"
+        const val  USER_NAME="kcp343"
+        const val  PASSWORD="kcp343"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,18 +43,26 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
 
         // Observe the loading state to show/hide the progress bar
         observeLoadingState()
+
+
+
     }
 
     /**
      * Initializes the UI components and sets up the button listener.
      */
     private fun initializeUI() {
+
+
+        binding.EditTextTaskUsername.setText(USER_NAME)
+        binding.EditTextPassword.setText(PASSWORD)
         // Set up button to trigger the login flow
         binding.buttonSignin.setOnClickListener {
             Log.d("LoginActivity", "Login button clicked.")
             performLoginFlow()
         }
 
+        // Observe the message from the ViewModel
         loginViewModel.message.observe(this) { message ->
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         }
@@ -64,47 +73,65 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
      */
     @SuppressLint("NewApi")
     private fun performLoginFlow() {
-        // Get the FCM token from SharedPreferences
-        val sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val fcmToken = sharedPreferences.getString(KEY_FCM_TOKEN, null)
+        // Get the values entered by the user
+        val username = binding.EditTextTaskUsername.text.toString()
+        val password = binding.EditTextPassword.text.toString()
 
-        if (fcmToken.isNullOrEmpty()) {
-            Log.e("LoginActivity", "FCM Token is not available. Cannot proceed with registration.")
+
+        // Check if the username and password are not empty
+        if (username.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Username and password must not be empty.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Perform login using the ViewModel
-        lifecycleScope.launch {
-            // Start the login flow
-            loginViewModel.performLoginFlow(this@LoginActivity)
+        // Check if the username and password match the predefined values
+        if (username == USER_NAME && password == PASSWORD) {
+            // Get the FCM token from SharedPreferences
 
-            // Wait for the loading state to become false
-            loginViewModel.isLoading.collect { loading ->
-                if (!loading) {
-                    // After the login flow is complete, show a success toast
-                    showLoginSuccessToast()
+            val sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val fcmToken = sharedPreferences.getString(KEY_FCM_TOKEN, null)
 
-                    // Navigate to the HomeActivity after successful login
-                    startActivity(Intent(this@LoginActivity, DashBoardActivity::class.java))
+            if (fcmToken.isNullOrEmpty()) {
+                Log.e("LoginActivity", "FCM Token is not available. Cannot proceed with registration.")
+                return
+            }
+
+            // Proceed with the login flow using the ViewModel
+            lifecycleScope.launch {
+                // Start the login flow
+                loginViewModel.performLoginFlow(this@LoginActivity)
+
+                // Wait for the loading state to become false
+                loginViewModel.isLoading.collect { loading ->
+                    if (!loading) {
+                        // After the login flow is complete, show a success toast
+//                        showLoginSuccessToast()
+
+                        // Navigate to the DashBoardActivity after successful login
+                        startActivity(Intent(this@LoginActivity, DashBoardActivity::class.java))
+                    }
                 }
             }
+        } else {
+            // Show an error if the username and password do not match
+            Toast.makeText(this, "Invalid username or password.", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     /**
      * Shows a toast message after a successful login.
      */
-    private fun showLoginSuccessToast() {
-        Toast.makeText(this, "Registration and Authentication Successful!", Toast.LENGTH_SHORT)
-            .show()
-    }
+//    private fun showLoginSuccessToast() {
+//        Toast.makeText(this, "Registration and Authentication Successful!", Toast.LENGTH_SHORT)
+//            .show()
+//    }
 
     /**
      * Observes the loading state from the ViewModel to show/hide the progress bar.
      */
     private fun observeLoadingState() {
         lifecycleScope.launch {
+            // Collect the loading state from the ViewModel's StateFlow
             loginViewModel.isLoading.collect { loading ->
                 // Show or hide the progress bar based on the loading state
                 binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE

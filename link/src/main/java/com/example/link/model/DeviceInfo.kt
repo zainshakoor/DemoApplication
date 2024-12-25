@@ -1,11 +1,19 @@
+package com.example.link.model
+
 import android.content.Context
-import android.devicelock.DeviceId
 import android.os.Build
-import android.provider.Settings
 import android.util.DisplayMetrics
 import androidx.annotation.RequiresApi
+import com.example.link.screens.login.LoginActivity
 import java.io.File
-import java.util.UUID
+
+
+private fun getDeviceId(context: Context): String {
+    return android.provider.Settings.Secure.getString(
+        context.contentResolver,
+        android.provider.Settings.Secure.ANDROID_ID
+    )
+}
 
 data class DeviceInfo(
     val deviceId: String,
@@ -22,8 +30,8 @@ data class DeviceInfo(
 
 @RequiresApi(Build.VERSION_CODES.R)
 fun generateDeviceInfo(context: Context): DeviceInfo {
-//    val deviceId=getDeviceId(context)
-    val deviceId="6tutgxtr452saedffd32"
+    val deviceId = getDeviceId(context)
+    // val deviceId="6tutgxtr452saedffd327624"
     // Get device model
 
     val deviceModel = Build.MODEL ?: "Unknown"
@@ -63,12 +71,7 @@ fun generateDeviceInfo(context: Context): DeviceInfo {
         projectKuid = projectKuid
     )
 }
-private fun getDeviceId(context: Context): String {
-    return android.provider.Settings.Secure.getString(
-        context.contentResolver,
-        android.provider.Settings.Secure.ANDROID_ID
-    )
-}
+
 fun checkIfRooted(): Boolean {
     // Simple check for root (this can be enhanced)
     return (
@@ -87,5 +90,5 @@ fun getScreenResolution(context: Context): String {
 }
 
 fun getUserIdentifier(): String {
-    return UUID.randomUUID().toString() // Example UUID
+    return LoginActivity.USER_NAME // Example UUID
 }

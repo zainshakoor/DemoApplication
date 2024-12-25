@@ -14,7 +14,7 @@ import com.example.link.model.SendAuthModel
 import com.example.link.model.VerifyAuthModel
 import com.example.link.network.RetrofitClient
 import com.example.link.screens.amount.AmountActivity
-import generateDeviceInfo
+import com.example.link.model.generateDeviceInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow

@@ -46,6 +46,7 @@ class MainActivity : FragmentActivity() {
 //                            )
                             val intent = Intent(context, LoginActivity::class.java)
                             context.startActivity(intent)
+                            finish()
                         }
 
                         // Add home screen route

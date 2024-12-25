@@ -17,9 +17,8 @@ import com.example.link.model.VerifyAuthModel
 import com.example.link.network.RetrofitClient
 import com.example.link.screens.login.LoginActivity
 import com.google.firebase.messaging.FirebaseMessaging
-import generateDeviceInfo
+import com.example.link.model.generateDeviceInfo
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -139,7 +138,6 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-
     // Function to receive the challenge key
     fun receiveChallengeKey(challengeKey: String) {
         viewModelScope.launch {
@@ -158,14 +156,6 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    // Get the device ID
-    private fun getDeviceId(context: Context): String {
-        return android.provider.Settings.Secure.getString(
-            context.contentResolver,
-            android.provider.Settings.Secure.ANDROID_ID
-        )
-    }
-
     // Register the device
     @RequiresApi(Build.VERSION_CODES.R)
     private suspend fun registerDeviceSuspend(
@@ -174,10 +164,10 @@ class LoginViewModel : ViewModel() {
     ): Response<ResponseModel>? {
         val deviceInfo = generateDeviceInfo(context)
 
-        val formattedkey = ExtEncryptionDecryption.mPublicKeyPEM.toString()
+        val formattedKey = ExtEncryptionDecryption.mPublicKeyPEM.toString()
         val request = RequestModel(
             fcmToken = fcmToken,
-            publicKey = formattedkey, // Ensure this is in PEM format
+            publicKey = formattedKey,
             deviceId = deviceInfo.deviceId,
             deviceModel = deviceInfo.deviceModel,
             deviceOS = deviceInfo.deviceOS,
@@ -199,8 +189,16 @@ class LoginViewModel : ViewModel() {
                 )
                 return response
             } else {
-                Log.e(TAG, "Register Device API Error: ${response.errorBody()?.string()}")
-                return null
+                val errorBody = response.errorBody()?.string()
+                if (errorBody?.contains("Device is already registered with same credentials.") == true) {
+                    Log.d(TAG, "Device already registered. Proceeding to the next screen.")
+                    _message.postValue("Device already registered. Proceeding to the next screen.")
+                    _isLoading.value = false
+                    return null
+                } else {
+                    Log.e(TAG, "Register Device API Error: $errorBody")
+                    return null
+                }
             }
         } catch (e: IOException) {
             Log.e(TAG, "Register Device Network Failure: ${e.message}", e)

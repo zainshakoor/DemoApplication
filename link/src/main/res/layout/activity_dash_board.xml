@@ -17,9 +17,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:fontFamily="@font/poppins_medium"
-        android:text="DashBoard"
+        android:text="Dashboard"
         android:textColor="@color/DarkGreen"
-        android:textSize="30sp"
+        android:textSize="33sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:layout_marginEnd="40dp"
+        android:layout_marginEnd="41dp"
         android:fontFamily="@font/poppins_semibold"
         android:text="Good Morning "
         android:textColor="@color/black"
@@ -47,10 +47,9 @@
         android:id="@+id/textViewGreetings12"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
         android:layout_marginRight="10dp"
         android:fontFamily="@font/poppins"
-        android:text="Hello,Zain Shakoor"
+        android:text="Hello, Zain Shakoor"
         android:textColor="@color/black"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -65,16 +64,15 @@
         android:layout_height="100dp"
         android:layout_marginHorizontal="30dp"
         android:layout_marginTop="50dp"
-        android:elevation="20dp"
-        app:cardBackgroundColor="@color/DarkGreen"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewGreetings12">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#072A2626">
+            android:background="#D3D3D3">
 
 
             <TextView
@@ -84,7 +82,7 @@
                 android:layout_marginTop="15dp"
                 android:fontFamily="@font/poppins_semibold"
                 android:text="Balance"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -96,14 +94,15 @@
                 android:id="@+id/textViewBalanceAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:fontFamily="@font/poppins_medium"
                 android:text="Rs: 2000"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="20sp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@+id/textViewBalance"
                 app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/textViewBalance"
-                app:layout_constraintTop_toBottomOf="@+id/textViewBalance" />
+                app:layout_constraintStart_toStartOf="@+id/textViewBalance" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -125,5 +124,22 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView" />
+
+
+    <TextView
+        android:id="@+id/textViewAccountVerified"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="92dp"
+        android:layout_marginRight="10dp"
+        android:fontFamily="@font/poppins"
+        android:text="Verified "
+        android:textColor="@color/black"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.533"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_sendMoney" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
