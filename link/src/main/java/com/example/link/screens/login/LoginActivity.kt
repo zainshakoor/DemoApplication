@@ -16,6 +16,7 @@ import com.example.link.screens.dashboard.DashBoardActivity
 import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 
 class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -26,9 +27,11 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         const val PREFS_NAME = "MyAppPreferences"
         const val KEY_FCM_TOKEN = "firebase_token"
         const val KEY_CHALLENGE = "challenge"
-        const val  USER_NAME="kcp343"
-        const val  PASSWORD="kcp343"
+        const val USER_NAME = "kcp343"
+        const val PASSWORD = "kcp343"
     }
+
+    private var currentToast: Toast? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,53 +44,31 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         // Start FCM token retrieval
         loginViewModel.retrieveAndStoreFCMToken(this)
 
-        // Observe the loading state to show/hide the progress bar
-        observeLoadingState()
-
-
-
+        // Observe the loading state and message flow directly with collect
+        observeFlows()
     }
 
-    /**
-     * Initializes the UI components and sets up the button listener.
-     */
     private fun initializeUI() {
-
-
         binding.EditTextTaskUsername.setText(USER_NAME)
         binding.EditTextPassword.setText(PASSWORD)
-        // Set up button to trigger the login flow
+
         binding.buttonSignin.setOnClickListener {
             Log.d("LoginActivity", "Login button clicked.")
             performLoginFlow()
         }
-
-        // Observe the message from the ViewModel
-        loginViewModel.message.observe(this) { message ->
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-        }
     }
 
-    /**
-     * Calls performLoginFlow function from the ViewModel.
-     */
     @SuppressLint("NewApi")
     private fun performLoginFlow() {
-        // Get the values entered by the user
         val username = binding.EditTextTaskUsername.text.toString()
         val password = binding.EditTextPassword.text.toString()
 
-
-        // Check if the username and password are not empty
         if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Username and password must not be empty.", Toast.LENGTH_SHORT).show()
+            showToast("Username and password must not be empty.")
             return
         }
 
-        // Check if the username and password match the predefined values
         if (username == USER_NAME && password == PASSWORD) {
-            // Get the FCM token from SharedPreferences
-
             val sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val fcmToken = sharedPreferences.getString(KEY_FCM_TOKEN, null)
 
@@ -96,76 +77,66 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
                 return
             }
 
-            // Proceed with the login flow using the ViewModel
             lifecycleScope.launch {
-                // Start the login flow
                 loginViewModel.performLoginFlow(this@LoginActivity)
-
-                // Wait for the loading state to become false
-                loginViewModel.isLoading.collect { loading ->
-                    if (!loading) {
-                        // After the login flow is complete, show a success toast
-//                        showLoginSuccessToast()
-
-                        // Navigate to the DashBoardActivity after successful login
-                        startActivity(Intent(this@LoginActivity, DashBoardActivity::class.java))
-                    }
-                }
             }
         } else {
-            // Show an error if the username and password do not match
-            Toast.makeText(this, "Invalid username or password.", Toast.LENGTH_SHORT).show()
+            showToast("Invalid username or password.")
         }
     }
 
-    /**
-     * Shows a toast message after a successful login.
-     */
-//    private fun showLoginSuccessToast() {
-//        Toast.makeText(this, "Registration and Authentication Successful!", Toast.LENGTH_SHORT)
-//            .show()
-//    }
+    private fun showToast(message: String) {
+        currentToast = Toast.makeText(this, message, Toast.LENGTH_LONG)
+        currentToast?.show()
+    }
 
-    /**
-     * Observes the loading state from the ViewModel to show/hide the progress bar.
-     */
-    private fun observeLoadingState() {
+    private fun navigateToDashboard() {
+        val intent = Intent(this@LoginActivity, DashBoardActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun observeFlows() {
         lifecycleScope.launch {
-            // Collect the loading state from the ViewModel's StateFlow
+            // Collect loading state flow
             loginViewModel.isLoading.collect { loading ->
-                // Show or hide the progress bar based on the loading state
                 binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
             }
         }
+
+        lifecycleScope.launch {
+            // Collect message flow
+            loginViewModel.messageFlow.collect { message ->
+                showToast(message)
+
+                when (message) {
+                    "Device Registration Successful!" -> {
+                        navigateToDashboard()
+                    }
+                    "Device is already registered. Proceeding..." -> {
+                        navigateToDashboard()
+                    }
+                }
+            }
+        }
     }
 
-    /**
-     * Retrieves the device ID.
-     */
     private fun getDeviceId(context: Context): String {
-        return Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 
     override fun onStart() {
         super.onStart()
-        // Register the listener for SharedPreferences
         val sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onStop() {
         super.onStop()
-        // Unregister the listener for SharedPreferences
         val sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    /**
-     * Callback method to be invoked when a shared preference is changed.
-     */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         if (key == KEY_CHALLENGE) {
             val updatedChallenge = sharedPreferences?.getString(KEY_CHALLENGE, null)

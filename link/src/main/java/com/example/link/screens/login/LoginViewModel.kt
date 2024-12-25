@@ -6,24 +6,18 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.link.encrypt.ExtEncryptionDecryption
 import com.example.link.model.RequestModel
 import com.example.link.model.ResponseModel
 import com.example.link.model.VerifyAuthModel
+import com.example.link.model.generateDeviceInfo
 import com.example.link.network.RetrofitClient
 import com.example.link.screens.login.LoginActivity
 import com.google.firebase.messaging.FirebaseMessaging
-import com.example.link.model.generateDeviceInfo
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.io.IOException
@@ -33,14 +27,14 @@ class LoginViewModel : ViewModel() {
     private val TAG = "LoginViewModel"
     private var decryptedChallenge: String? = null
 
-    private val _challengeKeyFlow = MutableSharedFlow<String>()
+    private val _challengeKeyFlow = MutableSharedFlow<String>(replay = 1) // replay the last emitted value
     val challengeKeyFlow: SharedFlow<String> = _challengeKeyFlow
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _message: MutableLiveData<String> = MutableLiveData()
-    val message: LiveData<String> = _message
+    private val _messageFlow = MutableSharedFlow<String>(replay = 1)
+    val messageFlow: SharedFlow<String> = _messageFlow
 
     // Retrieve and store FCM Token
     fun retrieveAndStoreFCMToken(context: Context) {
@@ -89,8 +83,7 @@ class LoginViewModel : ViewModel() {
             val registerResponse = registerDeviceSuspend(fcmToken, context)
             if (registerResponse == null || !registerResponse.isSuccessful) {
                 _isLoading.value = false
-                Log.e(TAG, "Register Device failed. Stopping the flow.")
-                return@launch
+                return@launch // Stop further execution if registration fails
             }
 
             Log.d(TAG, "Register Device successful.")
@@ -105,7 +98,7 @@ class LoginViewModel : ViewModel() {
                 return@launch
             }
 
-            if (challengeKey1 == null) {
+            if (challengeKey1.isNullOrEmpty()) {
                 _isLoading.value = false
                 Log.e(TAG, "First Challenge Key not received. Stopping the flow.")
                 return@launch
@@ -127,14 +120,13 @@ class LoginViewModel : ViewModel() {
             val verifyAuthResponse = verifyAuthSuspend(fcmToken, decryptedChallenge!!, context)
             if (verifyAuthResponse == null || !verifyAuthResponse.isSuccessful) {
                 _isLoading.value = false
-                Log.e(TAG, "Verify Authentication failed. Stopping the flow.")
-                return@launch
+                return@launch // Stop further execution if authentication fails
             }
 
             Log.d(TAG, "Verify Authentication successful.")
 
             _isLoading.value = false
-            _message.postValue("Registration and Authentication successful!")
+            _messageFlow.emit("Device Registration Successful!")
         }
     }
 
@@ -182,29 +174,43 @@ class LoginViewModel : ViewModel() {
 
         try {
             val response = RetrofitClient.instance.register(request)
+            val statusCode = response.code()
+
             if (response.isSuccessful) {
                 Log.d(
                     TAG,
-                    "Register Device API Success: ${response.body()?.status} - ${response.body()?.message}"
+                    "Register Device API Success: ${response.body()?.status} - ${response.body()?.message} - Status Code: $statusCode"
                 )
+//                _messageFlow.emit("Device Registration Successful!")
                 return response
             } else {
-                val errorBody = response.errorBody()?.string()
-                if (errorBody?.contains("Device is already registered with same credentials.") == true) {
-                    Log.d(TAG, "Device already registered. Proceeding to the next screen.")
-                    _message.postValue("Device already registered. Proceeding to the next screen.")
-                    _isLoading.value = false
-                    return null
-                } else {
-                    Log.e(TAG, "Register Device API Error: $errorBody")
-                    return null
+                Log.e(TAG, "Register Device API Error: Status Code: $statusCode")
+
+                when (statusCode) {
+                    400 -> {
+                        Log.e(TAG, "Device already registered with the same credentials.")
+                        _messageFlow.emit("Device is already registered. Proceeding...")
+                    }
+
+                    403 -> {
+                        Log.e(TAG, "403 Error: Access forbidden.")
+                        _messageFlow.emit("Access forbidden. Please contact support.")
+                    }
+
+                    else -> {
+                        Log.e(TAG, "Unhandled API Error: Status Code: $statusCode")
+                        _messageFlow.emit("Unexpected error occurred. Please try again.")
+                    }
                 }
+                return null
             }
         } catch (e: IOException) {
             Log.e(TAG, "Register Device Network Failure: ${e.message}", e)
+            _messageFlow.emit("Network error occurred. Please check your connection.")
             return null
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error: ${e.message}", e)
+            _messageFlow.emit("An unexpected error occurred. Please try again.")
             return null
         }
     }
