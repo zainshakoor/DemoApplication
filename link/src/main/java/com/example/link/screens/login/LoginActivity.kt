@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.link.screens.HomeActivity
+import com.example.link.screens.dashboard.DashBoardActivity
 import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
@@ -84,7 +85,7 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
                     showLoginSuccessToast()
 
                     // Navigate to the HomeActivity after successful login
-                    startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
+                    startActivity(Intent(this@LoginActivity, DashBoardActivity::class.java))
                 }
             }
         }

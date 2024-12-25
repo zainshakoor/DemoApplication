@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.link.screens.AmountActivity">
+    tools:context="com.example.link.screens.amount.AmountActivity">
 
 
     <TextView
@@ -38,7 +38,7 @@
         app:boxStrokeWidth="1dp"
         app:endIconMode="custom"
         app:hintTextColor="@color/black"
-        app:layout_constraintBottom_toTopOf="@+id/button_sendMoney"
+        app:layout_constraintBottom_toTopOf="@+id/button_Continue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -59,7 +59,7 @@
 
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button_sendMoney"
+        android:id="@+id/button_Continue"
         style="@style/button_style"
         android:layout_width="match_parent"
         android:layout_marginEnd="20dp"
@@ -73,4 +73,19 @@
         app:layout_constraintEnd_toEndOf="parent"
        />
 
+
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="0dp"
+        android:layout_height="85dp"
+        android:layout_marginTop="18dp"
+        android:elevation="80dp"
+        android:indeterminateDrawable="@drawable/custom_progressbar"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
