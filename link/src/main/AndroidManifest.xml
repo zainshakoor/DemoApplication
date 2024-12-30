@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.xmlmodule" >
+    package="com.example.xmlmodule">
 
-    <application android:theme="@style/Theme.DemoApplication" >
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+
+    <application android:theme="@style/Theme.DemoApplication">
+        <activity
+            android:name="com.example.link.screens.deviceregister.DeviceRegActivity"
+            android:exported="false" />
         <activity
             android:name="com.example.link.screens.review.ReviewActivity"
             android:exported="false" />
@@ -15,9 +23,9 @@
         <activity
             android:name="com.example.link.screens.login.LoginActivity"
             android:exported="false" /> <!-- Testing Activity -->
-<!--        <activity-->
-<!--            android:name="com.example.link.TestingActivity"-->
-<!--            android:exported="false" /> &lt;!&ndash; Home Activity with a specific theme &ndash;&gt;-->
+        <!-- <activity -->
+        <!-- android:name="com.example.link.TestingActivity" -->
+        <!-- android:exported="false" /> &lt;!&ndash; Home Activity with a specific theme &ndash;&gt; -->
         <activity
             android:name="com.example.link.screens.HomeActivity"
             android:exported="true"

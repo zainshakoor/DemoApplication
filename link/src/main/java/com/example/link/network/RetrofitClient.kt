@@ -41,7 +41,7 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(SendAuthService::class.java)
-
     }
-
 }
+
+

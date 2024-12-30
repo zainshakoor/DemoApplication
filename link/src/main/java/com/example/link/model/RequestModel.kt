@@ -12,12 +12,14 @@ data class RequestModel(
     val userIdentifier: String,
     val sdkVersion: String,
     val workspaceKuid: String,
-    val projectKuid: String
+    val projectKuid: String,
+    val signed_token:String
 )
 
 data class ResponseModel(
     val status: Boolean,
     val message: Any,
+    val signed_token: String?, // Nullable to handle cases where it's absent
     val reason: String?,
 
 )

@@ -209,7 +209,8 @@ class HomeViewModel : ViewModel() {
             userIdentifier = deviceInfo.userIdentifier,
             sdkVersion = deviceInfo.sdkVersion,
             workspaceKuid = deviceInfo.workspaceKuid,
-            projectKuid = deviceInfo.projectKuid
+            projectKuid = deviceInfo.projectKuid,
+            signed_token=""
         )
 
         return try {

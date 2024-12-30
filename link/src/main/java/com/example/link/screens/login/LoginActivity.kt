@@ -1,22 +1,31 @@
 package com.example.link.screens.login
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.link.imei.DeviceIdentifier
 import com.example.link.screens.dashboard.DashBoardActivity
+import com.example.link.screens.deviceregister.DeviceRegActivity
 import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.collect
 
 class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -29,10 +38,12 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         const val KEY_CHALLENGE = "challenge"
         const val USER_NAME = "kcp343"
         const val PASSWORD = "kcp343"
+        const val  signed_token="signed_token"
     }
 
     private var currentToast: Toast? = null
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -40,13 +51,16 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
 
         // Initialize UI components
         initializeUI()
+        val ipAddress = loginViewModel.getDeviceIpAddress(this)
+        println("Device IP Address: $ipAddress")
+        loginViewModel.fetchPublicIP()
 
         // Start FCM token retrieval
         loginViewModel.retrieveAndStoreFCMToken(this)
-
         // Observe the loading state and message flow directly with collect
         observeFlows()
     }
+
 
     private fun initializeUI() {
         binding.EditTextTaskUsername.setText(USER_NAME)
@@ -60,6 +74,8 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
 
     @SuppressLint("NewApi")
     private fun performLoginFlow() {
+
+
         val username = binding.EditTextTaskUsername.text.toString()
         val password = binding.EditTextPassword.text.toString()
 
@@ -73,7 +89,10 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
             val fcmToken = sharedPreferences.getString(KEY_FCM_TOKEN, null)
 
             if (fcmToken.isNullOrEmpty()) {
-                Log.e("LoginActivity", "FCM Token is not available. Cannot proceed with registration.")
+                Log.e(
+                    "LoginActivity",
+                    "FCM Token is not available. Cannot proceed with registration."
+                )
                 return
             }
 
@@ -96,6 +115,13 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         finish()
     }
 
+
+    private fun navigateToDeviceReg() {
+        val intent = Intent(this@LoginActivity, DeviceRegActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
     private fun observeFlows() {
         lifecycleScope.launch {
             // Collect loading state flow
@@ -113,9 +139,18 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
                     "Device Registration Successful!" -> {
                         navigateToDashboard()
                     }
+
                     "Device is already registered. Proceeding..." -> {
                         navigateToDashboard()
                     }
+                    "Device Registration Required" -> {
+                        navigateToDeviceReg()
+
+                    }
+
+
+
+
                 }
             }
         }

@@ -31,9 +31,9 @@ data class DeviceInfo(
 @RequiresApi(Build.VERSION_CODES.R)
 fun generateDeviceInfo(context: Context): DeviceInfo {
 
-    val deviceId = getDeviceId(context)
+   val deviceId = getDeviceId(context)
 
-//     val deviceId="6tutgxtrdsasdfsd327624"
+//   val deviceId="f0f7df077b99bada"
     // Get device model
 
     val deviceModel = Build.MODEL ?: "Unknown"
