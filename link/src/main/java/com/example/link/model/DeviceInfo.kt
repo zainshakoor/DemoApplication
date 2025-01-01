@@ -3,12 +3,13 @@ package com.example.link.model
 import android.content.Context
 import android.os.Build
 import android.util.DisplayMetrics
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.link.screens.login.LoginActivity
 import java.io.File
 
 
-private fun getDeviceId(context: Context): String {
+fun getDeviceId(context: Context): String {
     return android.provider.Settings.Secure.getString(
         context.contentResolver,
         android.provider.Settings.Secure.ANDROID_ID
@@ -31,9 +32,15 @@ data class DeviceInfo(
 @RequiresApi(Build.VERSION_CODES.R)
 fun generateDeviceInfo(context: Context): DeviceInfo {
 
-   val deviceId = getDeviceId(context)
+  val deviceId = getDeviceId(context)
 
-//   val deviceId="f0f7df077b99bada"
+    Log.d("DeviceId", deviceId)
+
+ // val deviceId="f0f7df32077b19bada"
+ //val deviceId="f0f7df32077b19bada1"
+// val deviceId="f0f7df32077b19bada3"
+// val deviceId="f0f7df32077b19bada4"
+// val deviceId="f0f7df32077b19bada5"
     // Get device model
 
     val deviceModel = Build.MODEL ?: "Unknown"
@@ -75,13 +82,13 @@ fun generateDeviceInfo(context: Context): DeviceInfo {
 }
 
 fun checkIfRooted(): Boolean {
-    // Simple check for root (this can be enhanced)
     return (
             System.getProperty("ro.debuggable") == "1" ||
                     File("/system/app/Superuser.apk").exists() ||
                     File("/system/xbin/su").exists()
             )
 }
+
 
 @RequiresApi(Build.VERSION_CODES.R)
 fun getScreenResolution(context: Context): String {

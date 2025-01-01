@@ -1,31 +1,29 @@
 package com.example.link.screens.login
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.net.wifi.WifiConfiguration
-import android.net.wifi.WifiInfo
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.link.imei.DeviceIdentifier
 import com.example.link.screens.dashboard.DashBoardActivity
 import com.example.link.screens.deviceregister.DeviceRegActivity
 import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
+import java.io.FileInputStream
+import java.io.InputStream
+import java.security.KeyStore
+import java.security.MessageDigest
 
 class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -38,7 +36,8 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         const val KEY_CHALLENGE = "challenge"
         const val USER_NAME = "kcp343"
         const val PASSWORD = "kcp343"
-        const val  signed_token="signed_token"
+        const val signed_token = "signed_token"
+//        const val  signed_tokenRegister="signed_tokenRegister"
     }
 
     private var currentToast: Toast? = null
@@ -51,17 +50,19 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
 
         // Initialize UI components
         initializeUI()
-        val ipAddress = loginViewModel.getDeviceIpAddress(this)
-        println("Device IP Address: $ipAddress")
-        loginViewModel.fetchPublicIP()
 
         // Start FCM token retrieval
         loginViewModel.retrieveAndStoreFCMToken(this)
         // Observe the loading state and message flow directly with collect
         observeFlows()
+        val deviceId = com.example.link.model.getDeviceId(this)
+        Log.d("DeviceId", deviceId)
+
+
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun initializeUI() {
         binding.EditTextTaskUsername.setText(USER_NAME)
         binding.EditTextPassword.setText(PASSWORD)
@@ -69,8 +70,42 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         binding.buttonSignin.setOnClickListener {
             Log.d("LoginActivity", "Login button clicked.")
             performLoginFlow()
+//            getSHAFromJKS(this,"Key0","123456")
         }
     }
+
+
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun getSHAFromJKS(context: Context, alias: String, keystorePassword: String) {
+//        try {
+//            // Load the keystore from the assets folder
+//            val inputStream: InputStream = FileInputStream("D:\\DemoApplicationToday\\2faA\\app\\keystore.jks")
+//            val keyStore = KeyStore.getInstance("JKS")
+//            keyStore.load(inputStream, keystorePassword.toCharArray())
+//
+//            // Retrieve the certificate using the alias
+//            val certificate = keyStore.getCertificate(alias)
+//
+//            if (certificate != null) {
+//                val encodedCert = certificate.encoded
+//
+//                // Compute SHA-1
+//                val sha1Digest = MessageDigest.getInstance("SHA-1")
+//                val sha1 = java.util.Base64.getEncoder().encodeToString(sha1Digest.digest(encodedCert))
+//                Log.d("SHA Retrieval", "SHA-1: $sha1")
+//
+//                // Compute SHA-256
+//                val sha256Digest = MessageDigest.getInstance("SHA-256")
+//                val sha256 = java.util.Base64.getEncoder().encodeToString(sha256Digest.digest(encodedCert))
+//                Log.d("SHA Retrieval", "SHA-256: $sha256")
+//            } else {
+//                Log.e("SHA Retrieval", "No certificate found for alias: $alias")
+//            }
+//        } catch (e: Exception) {
+//            Log.e("SHA Retrieval", "Error retrieving SHA from JKS", e)
+//        }
+//    }
+
 
     @SuppressLint("NewApi")
     private fun performLoginFlow() {
@@ -143,12 +178,11 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
                     "Device is already registered. Proceeding..." -> {
                         navigateToDashboard()
                     }
+
                     "Device Registration Required" -> {
                         navigateToDeviceReg()
 
                     }
-
-
 
 
                 }

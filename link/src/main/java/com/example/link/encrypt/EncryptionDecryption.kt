@@ -2,16 +2,15 @@ package com.example.link.encrypt
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import java.security.KeyStore
-import javax.crypto.Cipher
-import java.security.KeyPairGenerator
-import java.security.PrivateKey
-import java.security.PublicKey
 import android.util.Base64
 import android.util.Log
 import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
+import java.security.KeyPairGenerator
+import java.security.KeyStore
+import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.cert.CertificateFactory
+import javax.crypto.Cipher
 
 object ExtEncryptionDecryption {
 
@@ -44,6 +43,7 @@ object ExtEncryptionDecryption {
         }
     }
 
+
     private fun generateKeyPair() {
         val keyPairGenerator =
             KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
@@ -57,7 +57,6 @@ object ExtEncryptionDecryption {
 
         keyPairGenerator.initialize(keyGenParameterSpec)
         keyPairGenerator.generateKeyPair()
-
         Log.d("EncryptDecryptRSA", "RSA Key Pair generated and stored in Keystore.")
     }
 
