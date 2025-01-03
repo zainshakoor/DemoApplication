@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "DemoApplication"
 include(":app")
 include(":link")
+include(":2fa")

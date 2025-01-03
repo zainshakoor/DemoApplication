@@ -7,7 +7,6 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -17,13 +16,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.link.screens.dashboard.DashBoardActivity
 import com.example.link.screens.deviceregister.DeviceRegActivity
-import com.example.link.viewmodel.LoginViewModel
 import com.example.xmlmodule.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
-import java.io.FileInputStream
-import java.io.InputStream
-import java.security.KeyStore
-import java.security.MessageDigest
 
 class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -55,7 +49,7 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
         loginViewModel.retrieveAndStoreFCMToken(this)
         // Observe the loading state and message flow directly with collect
         observeFlows()
-        val deviceId = com.example.link.model.getDeviceId(this)
+        val deviceId = com.fusion.twofa.model.getDeviceId(this)
         Log.d("DeviceId", deviceId)
 
 
@@ -109,6 +103,8 @@ class LoginActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceC
 
     @SuppressLint("NewApi")
     private fun performLoginFlow() {
+
+
 
 
         val username = binding.EditTextTaskUsername.text.toString()

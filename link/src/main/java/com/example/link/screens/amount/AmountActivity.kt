@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.link.screens.review.ReviewActivity
-import com.example.link.viewmodel.AmountViewModel
 import com.example.xmlmodule.databinding.ActivityAmountBinding
 
 class AmountActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package com.example.link.viewmodel
+package com.example.link.screens.amount
 
 import android.content.Context
 import android.os.Build
@@ -8,18 +8,18 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.link.encrypt.ExtEncryptionDecryption
-import com.example.link.model.ResponseModel
-import com.example.link.model.SendAuthModel
-import com.example.link.model.VerifyAuthModel
-import com.example.link.network.RetrofitClient
-import com.example.link.screens.amount.AmountActivity
-import com.example.link.model.generateDeviceInfo
+import com.example.link.screens.login.LoginActivity
+import com.fusion.twofa.encrypt.ExtEncryptionDecryption
+import com.fusion.twofa.model.ResponseModel
+import com.fusion.twofa.model.SendAuthModel
+import com.fusion.twofa.model.VerifyAuthModel
+import com.fusion.twofa.model.generateDeviceInfo
+import com.fusion.twofa.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import retrofit2.Response
 
 class AmountViewModel : ViewModel() {
@@ -38,13 +38,11 @@ class AmountViewModel : ViewModel() {
     val challengeKeyFlow: SharedFlow<String> = _challengeKeyFlow
 
 
-    companion object
+    companion object {
 
-    {
-
-    val PREFS_NAME = "MyAppPreferences"
-    val KEY_FCM_TOKEN = "firebase_token"
-    val KEY_CHALLENGE = "challenge"
+        val PREFS_NAME = "MyAppPreferences"
+        val KEY_FCM_TOKEN = "firebase_token"
+        val KEY_CHALLENGE = "challenge"
 
 
     }
@@ -142,7 +140,7 @@ class AmountViewModel : ViewModel() {
         fcmToken: String,
         context: Context
     ): Response<ResponseModel>? {
-        val deviceInfo = generateDeviceInfo(context)
+        val deviceInfo = generateDeviceInfo(context, LoginActivity.USER_NAME)
 
         val sendAuthRequest = SendAuthModel(
             fcmToken,
@@ -179,7 +177,7 @@ class AmountViewModel : ViewModel() {
         challengeKey: String,
         context: Context
     ): Response<ResponseModel>? {
-        val deviceInfo = generateDeviceInfo(context)
+        val deviceInfo = generateDeviceInfo(context,LoginActivity.USER_NAME)
         val verifyAuth = VerifyAuthModel(
             fcmToken = fcmToken,
             deviceId = deviceInfo.deviceId,
@@ -189,7 +187,10 @@ class AmountViewModel : ViewModel() {
         return try {
             val response = RetrofitClient.verifyAuthInstance.verifyAuth(verifyAuth)
             if (response.isSuccessful) {
-                Log.d(TAG, "VerifyAuth success: ${response.body()?.status} - ${response.body()?.message}")
+                Log.d(
+                    TAG,
+                    "VerifyAuth success: ${response.body()?.status} - ${response.body()?.message}"
+                )
                 response
             } else {
                 Log.e(TAG, "VerifyAuth error: ${response.errorBody()?.string()}")

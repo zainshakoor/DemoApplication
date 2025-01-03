@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
     namespace = "com.example.xmlmodule"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -39,6 +40,8 @@ android {
 
 dependencies {
 
+    implementation(project(":2fa"))
+
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
@@ -46,10 +49,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-
-
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -60,11 +59,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation (libs.androidx.navigation.compose)
-    implementation(libs.firebase.inappmessaging.display) // or the latest version
-    implementation (libs.firebase.messaging)
-    implementation (libs.retrofit)
-    implementation(libs.converter.gson)
-    implementation(libs.androidx.biometric)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,4 +67,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation (libs.logging.interceptor)
+    implementation(libs.firebase.inappmessaging.display) // or the latest version
+    implementation (libs.firebase.messaging)
+    implementation (libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.androidx.biometric)
 }

@@ -1,4 +1,4 @@
-package com.example.link.viewmodel
+package com.example.link.screens.login
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -8,13 +8,12 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.link.encrypt.ExtEncryptionDecryption
-import com.example.link.model.RequestModel
-import com.example.link.model.ResponseModel
-import com.example.link.model.VerifyAuthModel
-import com.example.link.model.generateDeviceInfo
-import com.example.link.network.RetrofitClient
-import com.example.link.screens.login.LoginActivity
+import com.fusion.twofa.encrypt.ExtEncryptionDecryption
+import com.fusion.twofa.model.RequestModel
+import com.fusion.twofa.model.ResponseModel
+import com.fusion.twofa.model.VerifyAuthModel
+import com.fusion.twofa.model.generateDeviceInfo
+import com.fusion.twofa.network.RetrofitClient
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,10 +22,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Response
 import java.io.IOException
-import java.net.URL
 import java.util.concurrent.CancellationException
 
 class LoginViewModel : ViewModel() {
@@ -194,7 +191,7 @@ class LoginViewModel : ViewModel() {
         fcmToken: String,
         context: Context
     ): Response<ResponseModel>? {
-        val deviceInfo = generateDeviceInfo(context)
+        val deviceInfo = generateDeviceInfo(context, LoginActivity.USER_NAME)
 
         val signedToken = getSignedTokenFromSharedPreferences(context) ?: ""
 
@@ -271,6 +268,7 @@ class LoginViewModel : ViewModel() {
             return null
         }
     }
+
     // Verify authentication
     @SuppressLint("NewApi")
     private suspend fun verifyAuthSuspend(
@@ -278,11 +276,12 @@ class LoginViewModel : ViewModel() {
         challengeKey: String,
         context: Context,
     ): Response<ResponseModel>? {
-        val deviceInfo = generateDeviceInfo(context)
+        val deviceInfo = generateDeviceInfo(context, LoginActivity.USER_NAME)
         val verifyAuth = VerifyAuthModel(
             fcmToken = fcmToken,
             deviceId = deviceInfo.deviceId,
-            challengeKey = challengeKey)
+            challengeKey = challengeKey
+        )
 
         try {
             val response = RetrofitClient.verifyAuthInstance.verifyAuth(verifyAuth)
